@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "vide_directory_absolute": [
+    "C:\\Users\\298115\\Desktop\\my_tube\\dummy\\video_data\\file_1",
+    "C:\\Users\\298115\\Desktop\\my_tube\\dummy\\video_data\\file_2"
+  ],
+  "max_HLS_folder_size_GB": 1.0
+}
