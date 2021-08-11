@@ -10,7 +10,7 @@ import re
 import magic
 from colorama import Fore
 from tinydb import TinyDB, Query
-from whoosh.index import create_in
+from whoosh.index import create_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
 
@@ -130,8 +130,7 @@ class Utils:
                          'abs_path': file_new_absolute_path,
                          }, Video.id == file_id)
         # updating whoosh
-        schema = Schema(video_name=TEXT(stored=True), video_id=ID)
-        ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+        ix = open_dir(Constants.WHOOSH_INDEX_PATH)
         writer = ix.writer()
         writer.delete_by_term('id', file_id)
         writer.add_document(video_name=Utils.format_file_name(os.path.basename(file_new_absolute_path)),
@@ -150,8 +149,7 @@ class Utils:
         Utils.db.remove(Video.id == file_id)
 
         # deleting entry from whoosh
-        schema = Schema(video_name=TEXT(stored=True), video_id=ID)
-        ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+        ix = open_dir(Constants.WHOOSH_INDEX_PATH)
         writer = ix.writer()
         writer.delete_by_term('id', file_id)
         writer.commit()
@@ -181,11 +179,10 @@ class Utils:
                          'views': 0
                          })
         # now we will insert into Whoosh text search
-        schema = Schema(video_name=TEXT(stored=True), video_id=ID)
-        ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+        ix = open_dir(Constants.WHOOSH_INDEX_PATH)
         writer = ix.writer()
         writer.add_document(video_name=Utils.format_file_name(os.path.basename(file_absolute_path)),
-                                  video_id=file_id)
+                            video_id=file_id)
         writer.commit()
 
     @staticmethod
@@ -198,9 +195,11 @@ class Utils:
         # handling Whoosh database folder
         if not os.path.exists(Constants.WHOOSH_INDEX_PATH):
             os.mkdir(Constants.WHOOSH_INDEX_PATH)
+            create_in(Constants.WHOOSH_INDEX_PATH, Schema(video_name=TEXT(stored=True), video_id=ID(stored=True)))
         else:
             shutil.rmtree(Constants.WHOOSH_INDEX_PATH)
             os.mkdir(Constants.WHOOSH_INDEX_PATH)
+            create_in(Constants.WHOOSH_INDEX_PATH, Schema(video_name=TEXT(stored=True), video_id=ID(stored=True)))
 
         # handling Tinydb database folder
         if not os.path.exists(Constants.DATABASE_FILE_PATH):
@@ -219,23 +218,19 @@ class Utils:
 
 if __name__ == '__main__':
     # remove config.json
-    os.remove('config-lock.json')
+    # os.remove('config-lock.json')
 
     # test database
     Utils.parse_config_file()
+
+    # print all the data inside Tinydb
     print(Utils.db.all())
 
     # test Whoosh text search
-    schema = Schema(video_name=TEXT(stored=True), video_id=ID)
-    ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
-
-    # writer = ix.writer()
-    # writer.add_document(video_name="haha",
-    #                     video_id='aaaa')
-    # writer.commit()
-
-    print(list(ix.searcher().documents()))
+    ix = open_dir(Constants.WHOOSH_INDEX_PATH)
+    # print all the data inside Whoosh
+    # print(list(ix.searcher().documents()))
     with ix.searcher() as searcher:
-        query = QueryParser("video_name", ix.schema).parse("avseq")
+        query = QueryParser("video_name", ix.schema).parse("abhi na ")
         results = searcher.search(query)
         print(list(results))
