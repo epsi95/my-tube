@@ -7,7 +7,7 @@ import shutil
 import re
 
 # 3rd party libraries
-import magic
+#import magic
 from colorama import Fore
 from tinydb import TinyDB, Query
 from whoosh.index import create_in, open_dir
@@ -16,6 +16,7 @@ from whoosh.qparser import QueryParser
 
 # custom libraries
 from constants import Constants
+from video_handler import VideoHandler
 
 
 class Utils:
@@ -109,6 +110,11 @@ class Utils:
                 # delete this file since it no longer exists
                 Utils.db_delete_file(file_id=each_hash,
                                      file_absolute_path=config_lock[each_hash])
+            # now that files are in sync, we want to lock the file
+            with open(Constants.CONFIG_LOCK_FILE_PATH, 'w') as f:
+                f.write(json.dumps(temp_pkl))
+            # to create thumbnail, video metadata etc
+            VideoHandler.update_video_data()
         else:
             print(Fore.RED + 'no config-loc.json found, recalculating everything' + Fore.RESET)
             with open(Constants.CONFIG_LOCK_FILE_PATH, 'w') as f:
@@ -117,6 +123,7 @@ class Utils:
             Utils.clear_text_search_engine_and_database()
             for k, v in pickle.load(open(Constants.HASH_INDEX_FILE_PATH, 'rb')).items():
                 Utils.db_create_file(file_id=k, file_absolute_path=v)
+
 
     @staticmethod
     def db_rename_file(file_id, file_old_absolute_path, file_new_absolute_path, verbose=True):
@@ -148,6 +155,11 @@ class Utils:
         # delete a file
         db = TinyDB(Constants.DATABASE_FILE_PATH)
         Video = Query()
+        # removing thumbnail
+        thumbnail_path = db.search(Video.id == file_id)[0]['thumbnail_path']
+        if thumbnail_path:
+            shutil.rmtree(thumbnail_path)
+        # finally dropping the data from database
         db.remove(Video.id == file_id)
 
         # deleting entry from whoosh
@@ -168,7 +180,7 @@ class Utils:
         db.insert({'id': file_id,
                    'file_name': Utils.format_file_name(os.path.basename(file_absolute_path)),
                    'abs_path': file_absolute_path,
-                   'thumbnail_abs_path': None,
+                   'thumbnail_path': None,
                    'duration': None,
                    'width': None,
                    'height': None,
@@ -221,20 +233,20 @@ class Utils:
 
 if __name__ == '__main__':
     # remove config.json
-    #os.remove('config-lock.json')
+    # os.remove('config-lock.json')
 
     # test database
     Utils.parse_config_file()
 
     # print all the data inside Tinydb
-    #db = TinyDB(Constants.DATABASE_FILE_PATH)
-    #print(db.all())
+    # db = TinyDB(Constants.DATABASE_FILE_PATH)
+    # print(db.all())
 
     # test Whoosh text search
     ix = open_dir(Constants.WHOOSH_INDEX_PATH)
     # print all the data inside Whoosh
-    print(list(ix.searcher().documents()))
-    with ix.searcher() as searcher:
-        query = QueryParser("video_name", ix.schema).parse("ik va")
-        results = searcher.search(query)
-        print(list(results))
+    # print(list(ix.searcher().documents()))
+    # with ix.searcher() as searcher:
+    #     query = QueryParser("video_name", ix.schema).parse("ik va")
+    #     results = searcher.search(query)
+    #     print(list(results))

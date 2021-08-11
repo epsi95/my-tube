@@ -18,3 +18,4 @@ class Constants:
     HASH_INDEX_FILE_PATH = './hash_index.pkl'
     DATABASE_FILE_PATH = './db.json'
     WHOOSH_INDEX_PATH = './index'
+    THUMBNAIL_FOLDER_PATH = './thumbnails'
