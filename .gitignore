@@ -4,3 +4,6 @@ dummy/video_data/file_2
 venv/
 
 config-lock.json
+db.json
+
+index/
