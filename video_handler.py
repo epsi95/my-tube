@@ -1,6 +1,7 @@
 import os
 import datetime
 import random
+import shutil
 
 from tinydb import TinyDB, Query
 from colorama import Fore
@@ -18,7 +19,7 @@ class VideoHandler:
         # get all the videos for which thumbnail_abs_path == None
         db = TinyDB(Constants.DATABASE_FILE_PATH)
         Video = Query()
-        for each_file in db.search(Video.thumbnail_abs_path == None):
+        for each_file in db.search(Video.thumbnail_path == None):
             try:
                 probe = ffmpeg.probe(each_file['abs_path'])
                 video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
@@ -30,6 +31,8 @@ class VideoHandler:
                 a_bitrate = int(audio_stream.get('bit_rate', 0))
 
                 # making folder for each of the video
+                if os.path.exists(os.path.join(Constants.THUMBNAIL_FOLDER_PATH, str(each_file["id"]))):
+                    shutil.rmtree(os.path.join(Constants.THUMBNAIL_FOLDER_PATH, str(each_file["id"])))
                 os.mkdir(os.path.join(Constants.THUMBNAIL_FOLDER_PATH, str(each_file["id"])))
 
                 for i in range(1, 4):
