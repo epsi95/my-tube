@@ -4,18 +4,24 @@ import json
 import hashlib
 import pickle
 import shutil
+import re
 
 # 3rd party libraries
 import magic
+from colorama import Fore
+from tinydb import TinyDB, Query
+from whoosh.index import create_in
+from whoosh.fields import Schema, TEXT, ID
+from whoosh.qparser import QueryParser
 
 # custom libraries
 from constants import Constants
-from colorama import Fore
 
 
 class Utils:
     """All the utility methods"""
     print_ = print
+    db = TinyDB(Constants.DATABASE_FILE_PATH)
 
     @staticmethod
     def parse_config_file(verbose=True):
@@ -43,17 +49,25 @@ class Utils:
         print = Utils.print_ if verbose else lambda *args, **kwargs: True
 
         print('files to be processed:', Fore.GREEN + ', '.join(list_of_absolute_paths) + Fore.RESET)
+        temporary_files_list = []
         hash_index = {}
         for each_path in list_of_absolute_paths:
             for (root, dirs, files) in os.walk(each_path):
                 folder_name = os.path.basename(root)
                 # now we will check the mimetype of each file to detect if it is a video file
                 for file in files:
+                    print(f'\rProcessing {file}...', end='', flush=True)
                     mime_type = magic.from_file(os.path.join(root, file), mime=True)
                     if mime_type.startswith('video') or mime_type.startswith('application'):
-                        # now we will calculate Md5 hash for the file and store the signature to database
-                        md5_hash = Utils.calculate_md5_hash(os.path.join(root, file))
-                        hash_index[md5_hash] = os.path.join(root, file)
+                        temporary_files_list.append(os.path.join(root, file))
+        for index, absolute_file_name in enumerate(temporary_files_list, 1):
+            # now we will calculate Md5 hash for the file and store the signature to database
+            print(f'\r[{round((index / len(temporary_files_list)) * 100)}%] Calculating Md5 hash for {file}...', end='',
+                  flush=True)
+            md5_hash = Utils.calculate_md5_hash(absolute_file_name)
+            hash_index[md5_hash] = absolute_file_name
+        print()
+        del temporary_files_list
         # pickling the data for diff calculation
         pickle.dump(hash_index, open(Constants.HASH_INDEX_FILE_PATH, 'wb'))
         Utils.diff_calculate()
@@ -110,8 +124,19 @@ class Utils:
 
         print = Utils.print_ if verbose else lambda *args, **kwargs: True
 
-        print(Fore.YELLOW + f'DB RENAME {file_id, file_old_absolute_path, file_new_absolute_path}' + Fore.RESET)
-        pass
+        print(Fore.BLUE + f'[[DB RENAME]] {file_id, file_old_absolute_path, file_new_absolute_path}' + Fore.RESET)
+        Video = Query()
+        Utils.db.update({'file_name': Utils.format_file_name(os.path.basename(file_new_absolute_path)),
+                         'abs_path': file_new_absolute_path,
+                         }, Video.id == file_id)
+        # updating whoosh
+        schema = Schema(video_name=TEXT(stored=True), video_id=ID)
+        ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+        writer = ix.writer()
+        writer.delete_by_term('id', file_id)
+        writer.add_document(video_name=Utils.format_file_name(os.path.basename(file_new_absolute_path)),
+                            video_id=file_id)
+        writer.commit()
 
     @staticmethod
     def db_delete_file(file_id, file_absolute_path, verbose=True):
@@ -119,8 +144,17 @@ class Utils:
 
         print = Utils.print_ if verbose else lambda *args, **kwargs: True
 
-        print(Fore.YELLOW + f'DB RENAME {file_id, file_absolute_path}' + Fore.RESET)
-        pass
+        print(Fore.RED + f'[[DB DELETE]] {file_id, file_absolute_path}' + Fore.RESET)
+        # delete a file
+        Video = Query()
+        Utils.db.remove(Video.id == file_id)
+
+        # deleting entry from whoosh
+        schema = Schema(video_name=TEXT(stored=True), video_id=ID)
+        ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+        writer = ix.writer()
+        writer.delete_by_term('id', file_id)
+        writer.commit()
 
     @staticmethod
     def db_create_file(file_id, file_absolute_path, verbose=True):
@@ -128,8 +162,31 @@ class Utils:
 
         print = Utils.print_ if verbose else lambda *args, **kwargs: True
 
-        print(Fore.YELLOW + f'DB RENAME {file_id, file_absolute_path}' + Fore.RESET)
-        pass
+        print(Fore.YELLOW + f'[[DB CREATE]] {file_id, file_absolute_path}' + Fore.RESET)
+        # inserting data to database
+        Utils.db.insert({'id': file_id,
+                         'file_name': Utils.format_file_name(os.path.basename(file_absolute_path)),
+                         'abs_path': file_absolute_path,
+                         'thumbnail_abs_path': None,
+                         'duration': None,
+                         'width': None,
+                         'height': None,
+                         'v_bitrate': None,
+                         'a_bitrate': None,
+                         'is_favourite': False,
+                         'hls_processing': False,
+                         'hls_already_processed': False,
+                         'hls_process_location': '',
+                         'cluster_id': None,
+                         'views': 0
+                         })
+        # now we will insert into Whoosh text search
+        schema = Schema(video_name=TEXT(stored=True), video_id=ID)
+        ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+        writer = ix.writer()
+        writer.add_document(video_name=Utils.format_file_name(os.path.basename(file_absolute_path)),
+                                  video_id=file_id)
+        writer.commit()
 
     @staticmethod
     def clear_text_search_engine_and_database(verbose=True):
@@ -139,23 +196,46 @@ class Utils:
 
         print(Fore.RED + 'clearing Whoosh search engine and deleting old TinyDB database' + Fore.RESET)
         # handling Whoosh database folder
-        if not os.path.exists("index"):
-            os.mkdir('index')
+        if not os.path.exists(Constants.WHOOSH_INDEX_PATH):
+            os.mkdir(Constants.WHOOSH_INDEX_PATH)
         else:
-            shutil.rmtree('index')
-            os.mkdir('index')
+            shutil.rmtree(Constants.WHOOSH_INDEX_PATH)
+            os.mkdir(Constants.WHOOSH_INDEX_PATH)
 
         # handling Tinydb database folder
-        if not os.path.exists('db.json'):
-            with open('db.json', 'w') as f:
+        if not os.path.exists(Constants.DATABASE_FILE_PATH):
+            with open(Constants.DATABASE_FILE_PATH, 'w') as f:
                 pass
         else:
-            os.remove('db.json')
-            with open('db.json', 'w') as f:
+            os.remove(Constants.DATABASE_FILE_PATH)
+            with open(Constants.DATABASE_FILE_PATH, 'w') as f:
                 pass
 
-
+    @staticmethod
+    def format_file_name(bad_file_name):
+        """remove any special characters from file name"""
+        return re.sub(r'\s+', ' ', re.sub(r'[^a-z\s]', ' ', bad_file_name.lower().split('.')[0])).strip()
 
 
 if __name__ == '__main__':
+    # remove config.json
+    os.remove('config-lock.json')
+
+    # test database
     Utils.parse_config_file()
+    print(Utils.db.all())
+
+    # test Whoosh text search
+    schema = Schema(video_name=TEXT(stored=True), video_id=ID)
+    ix = create_in(Constants.WHOOSH_INDEX_PATH, schema)
+
+    # writer = ix.writer()
+    # writer.add_document(video_name="haha",
+    #                     video_id='aaaa')
+    # writer.commit()
+
+    print(list(ix.searcher().documents()))
+    with ix.searcher() as searcher:
+        query = QueryParser("video_name", ix.schema).parse("avseq")
+        results = searcher.search(query)
+        print(list(results))
