@@ -11,7 +11,7 @@ import magic
 from colorama import Fore
 from tinydb import TinyDB, Query
 from whoosh.index import create_in, open_dir
-from whoosh.fields import Schema, TEXT, ID
+from whoosh.fields import Schema, TEXT, ID, NGRAMWORDS
 from whoosh.qparser import QueryParser
 
 # custom libraries
@@ -21,7 +21,6 @@ from constants import Constants
 class Utils:
     """All the utility methods"""
     print_ = print
-    db = TinyDB(Constants.DATABASE_FILE_PATH)
 
     @staticmethod
     def parse_config_file(verbose=True):
@@ -57,13 +56,14 @@ class Utils:
                 # now we will check the mimetype of each file to detect if it is a video file
                 for file in files:
                     print(f'\rProcessing {file}...', end='', flush=True)
-                    mime_type = magic.from_file(os.path.join(root, file), mime=True)
-                    if mime_type.startswith('video') or mime_type.startswith('application'):
+                    # mime_type = magic.from_file(os.path.join(root, file), mime=True)
+                    # if mime_type.startswith('video') or mime_type.startswith('application'):
+                    if file.endswith(Constants.ACCEPT_FILE_FORMATS):
                         temporary_files_list.append(os.path.join(root, file))
         for index, absolute_file_name in enumerate(temporary_files_list, 1):
             # now we will calculate Md5 hash for the file and store the signature to database
-            print(f'\r[{round((index / len(temporary_files_list)) * 100)}%] Calculating Md5 hash for {file}...', end='',
-                  flush=True)
+            print(f'\r[{round((index / len(temporary_files_list)) * 100)}%] Calculating Md5 hash for '
+                  f'{os.path.basename(absolute_file_name)}...', end='', flush=True)
             md5_hash = Utils.calculate_md5_hash(absolute_file_name)
             hash_index[md5_hash] = absolute_file_name
         print()
@@ -125,14 +125,15 @@ class Utils:
         print = Utils.print_ if verbose else lambda *args, **kwargs: True
 
         print(Fore.BLUE + f'[[DB RENAME]] {file_id, file_old_absolute_path, file_new_absolute_path}' + Fore.RESET)
+        db = TinyDB(Constants.DATABASE_FILE_PATH)
         Video = Query()
-        Utils.db.update({'file_name': Utils.format_file_name(os.path.basename(file_new_absolute_path)),
-                         'abs_path': file_new_absolute_path,
-                         }, Video.id == file_id)
+        db.update({'file_name': Utils.format_file_name(os.path.basename(file_new_absolute_path)),
+                   'abs_path': file_new_absolute_path,
+                   }, Video.id == file_id)
         # updating whoosh
         ix = open_dir(Constants.WHOOSH_INDEX_PATH)
         writer = ix.writer()
-        writer.delete_by_term('id', file_id)
+        writer.delete_by_term('video_id', file_id)
         writer.add_document(video_name=Utils.format_file_name(os.path.basename(file_new_absolute_path)),
                             video_id=file_id)
         writer.commit()
@@ -145,13 +146,14 @@ class Utils:
 
         print(Fore.RED + f'[[DB DELETE]] {file_id, file_absolute_path}' + Fore.RESET)
         # delete a file
+        db = TinyDB(Constants.DATABASE_FILE_PATH)
         Video = Query()
-        Utils.db.remove(Video.id == file_id)
+        db.remove(Video.id == file_id)
 
         # deleting entry from whoosh
         ix = open_dir(Constants.WHOOSH_INDEX_PATH)
         writer = ix.writer()
-        writer.delete_by_term('id', file_id)
+        writer.delete_by_term('video_id', file_id)
         writer.commit()
 
     @staticmethod
@@ -162,22 +164,23 @@ class Utils:
 
         print(Fore.YELLOW + f'[[DB CREATE]] {file_id, file_absolute_path}' + Fore.RESET)
         # inserting data to database
-        Utils.db.insert({'id': file_id,
-                         'file_name': Utils.format_file_name(os.path.basename(file_absolute_path)),
-                         'abs_path': file_absolute_path,
-                         'thumbnail_abs_path': None,
-                         'duration': None,
-                         'width': None,
-                         'height': None,
-                         'v_bitrate': None,
-                         'a_bitrate': None,
-                         'is_favourite': False,
-                         'hls_processing': False,
-                         'hls_already_processed': False,
-                         'hls_process_location': '',
-                         'cluster_id': None,
-                         'views': 0
-                         })
+        db = TinyDB(Constants.DATABASE_FILE_PATH)
+        db.insert({'id': file_id,
+                   'file_name': Utils.format_file_name(os.path.basename(file_absolute_path)),
+                   'abs_path': file_absolute_path,
+                   'thumbnail_abs_path': None,
+                   'duration': None,
+                   'width': None,
+                   'height': None,
+                   'v_bitrate': None,
+                   'a_bitrate': None,
+                   'is_favourite': False,
+                   'hls_processing': False,
+                   'hls_already_processed': False,
+                   'hls_process_location': '',
+                   'cluster_id': None,
+                   'views': 0
+                   })
         # now we will insert into Whoosh text search
         ix = open_dir(Constants.WHOOSH_INDEX_PATH)
         writer = ix.writer()
@@ -195,11 +198,11 @@ class Utils:
         # handling Whoosh database folder
         if not os.path.exists(Constants.WHOOSH_INDEX_PATH):
             os.mkdir(Constants.WHOOSH_INDEX_PATH)
-            create_in(Constants.WHOOSH_INDEX_PATH, Schema(video_name=TEXT(stored=True), video_id=ID(stored=True)))
+            create_in(Constants.WHOOSH_INDEX_PATH, Schema(video_name=NGRAMWORDS(stored=True), video_id=ID(stored=True)))
         else:
             shutil.rmtree(Constants.WHOOSH_INDEX_PATH)
             os.mkdir(Constants.WHOOSH_INDEX_PATH)
-            create_in(Constants.WHOOSH_INDEX_PATH, Schema(video_name=TEXT(stored=True), video_id=ID(stored=True)))
+            create_in(Constants.WHOOSH_INDEX_PATH, Schema(video_name=NGRAMWORDS(stored=True), video_id=ID(stored=True)))
 
         # handling Tinydb database folder
         if not os.path.exists(Constants.DATABASE_FILE_PATH):
@@ -218,19 +221,20 @@ class Utils:
 
 if __name__ == '__main__':
     # remove config.json
-    # os.remove('config-lock.json')
+    #os.remove('config-lock.json')
 
     # test database
     Utils.parse_config_file()
 
     # print all the data inside Tinydb
-    print(Utils.db.all())
+    #db = TinyDB(Constants.DATABASE_FILE_PATH)
+    #print(db.all())
 
     # test Whoosh text search
     ix = open_dir(Constants.WHOOSH_INDEX_PATH)
     # print all the data inside Whoosh
-    # print(list(ix.searcher().documents()))
+    print(list(ix.searcher().documents()))
     with ix.searcher() as searcher:
-        query = QueryParser("video_name", ix.schema).parse("abhi na ")
+        query = QueryParser("video_name", ix.schema).parse("ik va")
         results = searcher.search(query)
         print(list(results))

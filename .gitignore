@@ -3,7 +3,11 @@ dummy/video_data/file_2
 
 venv/
 
+__pycache__/
+
+config.json
 config-lock.json
 db.json
+hash_index.pkl
 
 index/
