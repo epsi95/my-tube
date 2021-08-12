@@ -184,6 +184,8 @@ class Utils:
                    'duration': None,
                    'width': None,
                    'height': None,
+                   'format_name': None,
+                   'size': None,
                    'v_bitrate': None,
                    'a_bitrate': None,
                    'is_favourite': False,

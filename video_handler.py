@@ -27,7 +27,7 @@ class VideoHandler:
                 audio_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'audio'), None)
                 width = int(video_stream.get('width', 0))
                 height = int(video_stream.get('height', 0))
-                duration = datetime.timedelta(seconds=float(video_stream.get('duration', 0)))
+                duration = datetime.timedelta(seconds=float(probe['format'].get('duration', 0)))
                 v_bitrate = int(video_stream.get('bit_rate', 0))
                 a_bitrate = int(audio_stream.get('bit_rate', 0))
 
@@ -44,16 +44,18 @@ class VideoHandler:
                                        seconds=random.randint(0,
                                                               int(float(video_stream.get('duration', 0)))))).split(
                             ',')[-1].strip())
-                            .output(f'./{Constants.THUMBNAIL_FOLDER_PATH}/{each_file["id"]}/{each_file["id"]}_{i}.png', vframes=1)
+                            .output(f'{Constants.THUMBNAIL_FOLDER_PATH}/{each_file["id"]}/{each_file["id"]}_{i}.png', vframes=1)
                             .run()
                     )
                 db.update({
-                    'thumbnail_path': f'./{Constants.THUMBNAIL_FOLDER_PATH}/{each_file["id"]}',
+                    'thumbnail_path': f'{Constants.THUMBNAIL_FOLDER_PATH}/{each_file["id"]}',
                     'duration': str(duration).split(',')[-1].strip(),
                     'width': width,
                     'height': height,
                     'v_bitrate': v_bitrate,
                     'a_bitrate': a_bitrate,
+                    'format_name': probe['format'].get('format_name', 'unknown'),
+                    'size': int(probe['format'].get('size', 0)),
                 }, Video.id == each_file['id'])
             except Exception as e:
                 raise e
