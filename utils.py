@@ -72,6 +72,8 @@ class Utils:
         # pickling the data for diff calculation
         pickle.dump(hash_index, open(Constants.HASH_INDEX_FILE_PATH, 'wb'))
         Utils.diff_calculate()
+        # to create thumbnail, video metadata etc
+        VideoHandler.update_video_data()
 
     @staticmethod
     def calculate_md5_hash(absolute_file_path):
@@ -113,8 +115,6 @@ class Utils:
             # now that files are in sync, we want to lock the file
             with open(Constants.CONFIG_LOCK_FILE_PATH, 'w') as f:
                 f.write(json.dumps(temp_pkl))
-            # to create thumbnail, video metadata etc
-            VideoHandler.update_video_data()
         else:
             print(Fore.RED + 'no config-loc.json found, recalculating everything' + Fore.RESET)
             with open(Constants.CONFIG_LOCK_FILE_PATH, 'w') as f:
@@ -228,7 +228,7 @@ class Utils:
     @staticmethod
     def format_file_name(bad_file_name):
         """remove any special characters from file name"""
-        return re.sub(r'\s+', ' ', re.sub(r'[^a-z\s]', ' ', bad_file_name.lower().split('.')[0])).strip()
+        return re.sub(r'\s+', ' ', re.sub(r'[^a-z\d\s]', ' ', bad_file_name.lower().split('.')[0])).strip()
 
 
 if __name__ == '__main__':
