@@ -6,6 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/dummy" />
       <excludeFolder url="file://$MODULE_DIR$/index" />
       <excludeFolder url="file://$MODULE_DIR$/thumbnails" />
+      <excludeFolder url="file://$MODULE_DIR$/HLS" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -19,3 +19,4 @@ class Constants:
     DATABASE_FILE_PATH = './db.json'
     WHOOSH_INDEX_PATH = './index'
     THUMBNAIL_FOLDER_PATH = './thumbnails'
+    HLS_OUTPUT_PATH = './HLS'
