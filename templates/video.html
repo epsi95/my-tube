@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link href="http://vjs.zencdn.net/6.2.8/video-js.css" rel="stylesheet">
+
+    <title>MyTube</title>
+    <link rel="shortcut icon" type="image/jpg" href="{{ url_for('static', filename='images/favicon.ico') }}"/>
+</head>
+<body>
+<!--    start of navbar-->
+<nav class="navbar sticky-top navbar-light bg-light">
+    <div class="container-fluid flex-row justify-content-start">
+        <a class="navbar-brand mx-3" href="/">
+            <img src="{{ url_for('static', filename='images/icon.png') }}" alt="" width="30" height="24">
+            MyTube
+        </a>
+    </div>
+</nav>
+<!--    end of nav bar-->
+
+<!--start of video player-->
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<video id="video" class="container video-js vjs-default-skin" controls></video>
+<script>
+  if (Hls.isSupported()) {
+    var video = document.getElementById('video');
+    var hls = new Hls();
+    // bind them together
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+      console.log('video and hls.js are now bound together !');
+      hls.loadSource("/video_content/{{file_name}}");
+      hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+        console.log(
+          'manifest loaded, found ' + data.levels.length + ' quality level'
+        );
+      });
+    });
+  }else{
+  alert('HLS not supported');
+  }
+  video.play()
+</script>
+
+<!--<video id="player" class="container video-js vjs-default-skin" controls preload="none">-->
+<!--    <source src="/video_content/{{file_name}}" type="application/x-mpegURL">-->
+<!--</video>-->
+<!--<script src="http://vjs.zencdn.net/6.2.8/video.js"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.12.2/videojs-contrib-hls.min.js"></script>-->
+<!--<script>-->
+<!--          var player = videojs('player');-->
+<!--          player.play();-->
+<!--</script>-->
+
+<!--end of video player-->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+        crossorigin="anonymous"></script>
+</body>
+</html>
