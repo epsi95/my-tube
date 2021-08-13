@@ -2,7 +2,7 @@
 A video server service local video files over local internet using HLS protocol along with many capabilities like searching using test search engine etc.
 
 ## How this works
-1. First step is to edit the `config.json` file. One needs to add the video directories to include.
+1. First step is to edit the `config.json` file. One needs to add the video directories to include. This file is not there, app should be run atleast one to generate this file.
 ```
 {
   "version": "1.0.0",
@@ -22,7 +22,7 @@ Program then calculates the `diff` namely
    2. Which files should be inserted as a new file
    3. which files should be renamed (Md5 hash same, maybe video renamed or moved by user)
 
-![hashing](./sample_images/Screenshot%20from%202021-08-14%2003-19-45.png)
+![hashing](sample_images/Screenshot%20from%202021-08-14%2003-19-45.png)
 
 3. For database [TinyDB](https://tinydb.readthedocs.io/en/latest/index.html) is used and for text search [Whoosh](https://whoosh.readthedocs.io/en/latest/intro.html) is used. The data structure for the database is like
 ```
@@ -50,13 +50,13 @@ Program then calculates the `diff` namely
 6. Once a request if `GET`, server checks if the `<file_name>.m3u8` available inside `Constants.HLS_OUTPUT_PATH` or not.
 If not it will start a `new process` to process the file and deliver the chunks to client accordingly.
 
-![hls process](./sample_images/Screenshot%20from%202021-08-14%2003-28-38.png)
+![hls process](sample_images/Screenshot%20from%202021-08-14%2003-28-38.png)
 
 Once processed, the next time the buffering will be low. Buffering can be also be affected by the resolution during conversion. This app is using deafult `Representation(Size(640, 360), Bitrate(276 * 1024, 128 * 1024))`
 
 ---
 ## Architecture
-![diagram](./sample_images/diagram.png)
+![diagram](sample_images/diagram.png)
 
 ---
 
