@@ -20,8 +20,12 @@
             <img src="{{ url_for('static', filename='images/icon.png') }}" alt="" width="30" height="24">
             MyTube
         </a>
-        <form class="">
-            <input class="form-control" type="search" placeholder="Search" aria-label="Search">
+        <form id="search-form">
+            <input id="search-input" class="form-control" type="search" placeholder="Search" aria-label="Search" list='listid' autocomplete="off">
+            <datalist id='listid'>
+<!--               <option label='label1' data-value='value1'>-->
+<!--               <option label='label2' data-value='value2'>-->
+            </datalist>
         </form>
     </div>
 </nav>
@@ -44,6 +48,7 @@
     {% endfor %}
 </div>
 <!--    end of list of suggestion-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"

@@ -227,6 +227,10 @@ class Utils:
             with open(Constants.DATABASE_FILE_PATH, 'w') as f:
                 pass
 
+        # removing HLS folder
+        if os.path.exists(Constants.HLS_OUTPUT_PATH):
+            shutil.rmtree(Constants.HLS_OUTPUT_PATH)
+
     @staticmethod
     def format_file_name(bad_file_name):
         """remove any special characters from file name"""

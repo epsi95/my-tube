@@ -27,39 +27,39 @@
 
 <!--start of video player-->
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>-->
 
-<video id="video" class="container video-js vjs-default-skin" controls></video>
-<script>
-  if (Hls.isSupported()) {
-    var video = document.getElementById('video');
-    var hls = new Hls();
-    // bind them together
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MEDIA_ATTACHED, function () {
-      console.log('video and hls.js are now bound together !');
-      hls.loadSource("/video_content/{{file_name}}");
-      hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-        console.log(
-          'manifest loaded, found ' + data.levels.length + ' quality level'
-        );
-      });
-    });
-  }else{
-  alert('HLS not supported');
-  }
-  video.play()
-</script>
-
-<!--<video id="player" class="container video-js vjs-default-skin" controls preload="none">-->
-<!--    <source src="/video_content/{{file_name}}" type="application/x-mpegURL">-->
-<!--</video>-->
-<!--<script src="http://vjs.zencdn.net/6.2.8/video.js"></script>-->
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.12.2/videojs-contrib-hls.min.js"></script>-->
+<!--<video id="video" class="container video-js vjs-default-skin" controls></video>-->
 <!--<script>-->
-<!--          var player = videojs('player');-->
-<!--          player.play();-->
+<!--  if (Hls.isSupported()) {-->
+<!--    var video = document.getElementById('video');-->
+<!--    var hls = new Hls();-->
+<!--    // bind them together-->
+<!--    hls.attachMedia(video);-->
+<!--    hls.on(Hls.Events.MEDIA_ATTACHED, function () {-->
+<!--      console.log('video and hls.js are now bound together !');-->
+<!--      hls.loadSource("/video_content/{{file_name}}");-->
+<!--      hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {-->
+<!--        console.log(-->
+<!--          'manifest loaded, found ' + data.levels.length + ' quality level'-->
+<!--        );-->
+<!--      });-->
+<!--    });-->
+<!--  }else{-->
+<!--  alert('HLS not supported');-->
+<!--  }-->
+<!--  video.play()-->
 <!--</script>-->
+
+<video id="player" class="container video-js vjs-default-skin" controls preload>
+    <source src="/video_content/{{ video_entity['id'] }}.m3u8" type="application/x-mpegURL">
+</video>
+<script src="http://vjs.zencdn.net/6.2.8/video.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.12.2/videojs-contrib-hls.min.js"></script>
+<script>
+          var player = videojs('player');
+          player.play();
+</script>
 
 <!--end of video player-->
 
