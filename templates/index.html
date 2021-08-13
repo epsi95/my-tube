@@ -14,9 +14,9 @@
 </head>
 <body>
 <!--    start of navbar-->
-<nav class="navbar sticky-top navbar-light bg-light">
+<nav class="navbar sticky-top navbar-light bg-dark">
     <div class="container-fluid flex-row justify-content-start">
-        <a class="navbar-brand mx-3" href="/">
+        <a class="navbar-brand mx-3 text-white" href="/">
             <img src="{{ url_for('static', filename='images/icon.png') }}" alt="" width="30" height="24">
             MyTube
         </a>
@@ -33,19 +33,27 @@
 
 <!--    start of list of suggestion-->
 <div class="container">
-    {% for d in data %}
-
-    <div class="card my-4">
-        <a href="/video/{{ d['id'] }}">
-            <img src="{{ url_for('thumbnail', file_id=d['id']) }}" class="card-img-top" alt="{{ d['file_name'] }}">
-        </a>
-        <div class="card-body">
-            <h5 class="card-title">{{ d['file_name'].capitalize() }}</h5>
-            <p class="card-text text-muted">Duration: {{ d['duration'].split('.')[0] }}</p>
+    <div id="suggestion">
+        {% for d in data %}
+        <div class="card my-4">
+            <a href="/video/{{ d['id'] }}">
+                <img src="{{ url_for('thumbnail', file_id=d['id']) }}" class="card-img-top" alt="{{ d['file_name'] }}">
+            </a>
+            <div class="card-body">
+                <h5 class="card-title">{{ d['file_name'].capitalize() }}</h5>
+                <p class="card-text text-muted">Duration: {{ d['duration'].split('.')[0] }}</p>
+            </div>
         </div>
+
+        {% endfor %}
     </div>
 
-    {% endfor %}
+    <div class="d-flex justify-content-center my-3">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
 </div>
 <!--    end of list of suggestion-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>

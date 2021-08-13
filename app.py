@@ -75,6 +75,11 @@ def search(search_string):
         'results': result})
 
 
+@app.route('/api/content')
+def get_content():
+    return jsonify(get_random_video_suggestion(5))
+
+
 @app.after_request
 def add_header(response):
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
@@ -124,7 +129,7 @@ def serve_video(file_name):
 def serve_video_page(video_id):
     db = TinyDB(Constants.DATABASE_FILE_PATH)
     video_entity = db.search(Query().id == video_id)[0]
-    return render_template('video.html', video_entity=video_entity)
+    return render_template('video.html', video_entity=video_entity, data=get_random_video_suggestion(10))
 
 
 @app.route('/api/get_more/<int:count>')
@@ -140,7 +145,7 @@ def thumbnail(file_id):
 
 @app.route('/')
 def index():
-    return render_template('index.html', data=get_random_video_suggestion(20))
+    return render_template('index.html', data=get_random_video_suggestion(5))
 
 
 if __name__ == '__main__':

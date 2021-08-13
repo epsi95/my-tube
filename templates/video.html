@@ -15,9 +15,9 @@
 </head>
 <body>
 <!--    start of navbar-->
-<nav class="navbar sticky-top navbar-light bg-light">
+<nav class="navbar sticky-top navbar-light bg-dark">
     <div class="container-fluid flex-row justify-content-start">
-        <a class="navbar-brand mx-3" href="/">
+        <a class="navbar-brand mx-3 text-white" href="/">
             <img src="{{ url_for('static', filename='images/icon.png') }}" alt="" width="30" height="24">
             MyTube
         </a>
@@ -51,14 +51,74 @@
 <!--  video.play()-->
 <!--</script>-->
 
-<video id="player" class="container video-js vjs-default-skin" controls preload>
-    <source src="/video_content/{{ video_entity['id'] }}.m3u8" type="application/x-mpegURL">
+<video id="player" class="sticky-top container my-4 video-js vjs-theme-city" height="400" controls preload>
+    <!--    <source src="/video_content/{{ video_entity['id'] }}.m3u8" type="application/x-mpegURL">-->
 </video>
+<div>
+    <h1>Coming next(autoplay)</h1>
+    <ol class="list-group list-group-numbered">
+        {% for d in data %}
+      <li class="list-group-item d-flex justify-content-between align-items-start">
+        <div class="ms-2 me-auto">
+          <div class="fw-bold">{{ d['file_name'] }}</div>
+        </div>
+        <span class="badge bg-primary rounded-pill">{{ d['duration'].split('.')[0] }}</span>
+      </li>
+        {% endfor %}
+    </ol>
+</div>
+
 <script src="http://vjs.zencdn.net/6.2.8/video.js"></script>
+<script src="{{ url_for('static', filename='js/videojs-playlist.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.12.2/videojs-contrib-hls.min.js"></script>
+<link href="https://unpkg.com/@videojs/themes@1/dist/city/index.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/videojs-overlay-buttons@latest/dist/videojs-overlay-buttons.css"/>
+<script src="https://unpkg.com/videojs-overlay-buttons@latest/dist/videojs-overlay-buttons.min.js"></script>
 <script>
           var player = videojs('player');
-          player.play();
+          player.touchOverlay({
+              previous: {
+                handleClick: () => {
+                    if(player.playlist.currentIndex()){
+                        player.playlist.previous();
+                        player.play();
+                    }
+                    }
+              },
+                            next: {
+              handleClick: () => {
+                    if(player.playlist.currentIndex() != player.playlist.lastIndex()){
+                        player.playlist.next();
+                        player.play();
+                    }
+                    }
+                  }
+            });
+          player.playlist([{
+              sources: [{
+                src: "/video_content/{{ video_entity['id'] }}.m3u8",
+                type: "application/x-mpegURL"
+              }],
+              poster: '{{ url_for('thumbnail', file_id=video_entity['id']) }}'
+            },
+            {% for d in data %}
+            {
+            sources: [{
+                src: "/video_content/{{ d['id'] }}.m3u8",
+                type: "application/x-mpegURL"
+              }],
+              poster: '{{ url_for('thumbnail', file_id=d['id']) }}'
+            },
+            {% endfor %}
+            ]);
+
+            // Play through the playlist automatically.
+            player.playlist.autoadvance(0);
+            player.play();
+
+
+
+
 </script>
 
 <!--end of video player-->
@@ -66,5 +126,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
         crossorigin="anonymous"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </body>
 </html>
