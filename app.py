@@ -150,5 +150,5 @@ def index():
 
 if __name__ == '__main__':
     print(Fore.GREEN + 'Preparing the indexes' + Fore.RESET)
-    # Utils.parse_config_file()
+    Utils.parse_config_file()
     app.run(host='0.0.0.0', threaded=True)
