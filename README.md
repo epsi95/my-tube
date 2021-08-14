@@ -1,6 +1,6 @@
 ## MyTube
 
-![video explanation](https://www.youtube.com/watch?v=yWijPZ3OrEA&t)
+[video explanation](https://www.youtube.com/watch?v=yWijPZ3OrEA&t)
 
 A video server serving local video files over local internet using HLS protocol along with many capabilities like searching using text-search engine etc.
 
