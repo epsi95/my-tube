@@ -1,7 +1,7 @@
 ## MyTube
-A video server service local video files over local internet using HLS protocol along with many capabilities like searching using test search engine etc.
+A video server serving local video files over local internet using HLS protocol along with many capabilities like searching using text-search engine etc.
 
-## How this works
+## How does this works
 1. First step is to edit the `config.json` file. One needs to add the video directories to include. This file is not there, app should be run atleast one to generate this file.
 ```
 {
@@ -13,8 +13,8 @@ A video server service local video files over local internet using HLS protocol 
   "max_HLS_folder_size_GB": 1.0
 }
 ```
-There maybe other files than video, one can determine file type using the `mimetype` or the `extension` of the file. The extensions are mentioned in `Constants.ACCEPT_FILE_FORMATS`
-2. One the `paths` are added, program calculated the `Md5` hash of each file. Whenever the server starts, it also creates a `config-lock.json` to preserver the last know `image` of `config.json` along with hash.
+There maybe other files other than video like .txt, .mp3 etc, one can determine file type using the `mimetype` or the `extension` of the file. The extensions are mentioned in `Constants.ACCEPT_FILE_FORMATS`
+2. Once the `paths` are added, program calculated the `Md5` hash of each file. Whenever the server starts, it also creates a `config-lock.json` to preserver the last know `image` of `config.json` along with hash.
 Delete `config-loc.json` if one wants to reset everything.
 Program then calculates the `diff` namely 
 
@@ -47,12 +47,12 @@ Program then calculates the `diff` namely
 ```
 4. After updating the indexes, `Thumbnails` are generated for the required files using [ffmeg](https://ffmpeg.org/download.html). make sure `ffmpeg` installed on the system. and stored in `Constants.THUMBNAIL_FOLDER_PATH`
 5. Once it is done, server is ready to accept the requests.
-6. Once a request if `GET`, server checks if the `<file_name>.m3u8` available inside `Constants.HLS_OUTPUT_PATH` or not.
+6. Once a request is `GET`, server checks if the `<file_name>.m3u8` available inside `Constants.HLS_OUTPUT_PATH` or not.
 If not it will start a `new process` to process the file and deliver the chunks to client accordingly.
 
 ![hls process](sample_images/Screenshot%20from%202021-08-14%2003-28-38.png)
 
-Once processed, the next time the buffering will be low. Buffering can be also be affected by the resolution during conversion. This app is using deafult `Representation(Size(640, 360), Bitrate(276 * 1024, 128 * 1024))`
+Once processed, the next time the buffering will be less to none. Buffering can be also be affected by the resolution during conversion. This app is using deafult `Representation(Size(640, 360), Bitrate(276 * 1024, 128 * 1024))`
 
 ---
 ## Architecture
