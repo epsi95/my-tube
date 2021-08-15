@@ -48,7 +48,7 @@ Program then calculates the `diff` namely
  'views': 
  }
 ```
-4. After updating the indexes, `Thumbnails` are generated for the required files using [ffmeg](https://ffmpeg.org/download.html). make sure `ffmpeg` installed on the system. and stored in `Constants.THUMBNAIL_FOLDER_PATH`
+4. After updating the indexes, `Thumbnails` are generated for the required files using [FFmpeg](https://ffmpeg.org/download.html). make sure `FFmpeg` installed on the system. and stored in `Constants.THUMBNAIL_FOLDER_PATH`
 5. Once it is done, server is ready to accept the requests.
 6. Once a request is `GET`, server checks if the `<file_name>.m3u8` available inside `Constants.HLS_OUTPUT_PATH` or not.
 If not it will start a `new process` to process the file and deliver the chunks to client accordingly.
@@ -64,7 +64,7 @@ Once processed, the next time the buffering will be less to none. Buffering can 
 ---
 
 ## Installing
-1. Make sure [ffmeg](https://ffmpeg.org/download.html) is installed. I worked with Ubuntu, hope will work fine with windows als well.
+1. Make sure [FFmpeg](https://ffmpeg.org/download.html) is installed. I worked with Ubuntu, hope will work fine with windows als well.
 2. Create virtual env `python -m venv venv`
 3. Activate it ex: in ubuntu `source ./venv/bin/activate`
 4. Install the required packages `pip install -r requirements.txt`
